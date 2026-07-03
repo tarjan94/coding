@@ -312,6 +312,7 @@ $("#settingsBtn").addEventListener("click", () => {
 $("#s_saveKeyBtn").addEventListener("click", () => {
   Kakao.setKey($("#s_kakaoKey").value);
   toast("API 키가 저장되었습니다");
+  settingsModal.hidden = true;
 });
 
 $("#s_exportBtn").addEventListener("click", () => {
