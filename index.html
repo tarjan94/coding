@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>우리집 도서관</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-title">
+      <h1>📚 우리집 도서관</h1>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="topbar-actions">
+      <input type="search" id="searchInput" placeholder="제목, 저자로 검색" />
+      <select id="categoryFilter"></select>
+      <button id="enrichAllBtn" class="btn-secondary" title="저자/출판사/표지 정보가 없는 책을 카카오 API로 자동 보완합니다">정보 자동 보완</button>
+      <button id="settingsBtn" class="btn-secondary">설정</button>
+      <button id="addBtn" class="btn-primary">+ 새 책 등록</button>
+    </div>
+  </header>
+
+  <main id="bookGrid" class="book-grid"></main>
+  <p id="emptyState" class="empty-state" hidden>등록된 책이 없습니다. '새 책 등록'으로 추가해 보세요.</p>
+
+  <!-- 책 상세/수정 모달 -->
+  <div id="detailModal" class="modal-overlay" hidden>
+    <div class="modal">
+      <button class="modal-close" data-close>×</button>
+      <h2>책 상세 정보</h2>
+      <form id="detailForm">
+        <input type="hidden" id="d_id" />
+        <div class="modal-body">
+          <div class="cover-col">
+            <img id="d_cover" class="cover-preview" src="" alt="표지" />
+            <label>표지 이미지 URL
+              <input type="text" id="d_coverUrl" placeholder="https://..." />
+            </label>
+          </div>
+          <div class="fields-col">
+            <label>제목 <input type="text" id="d_title" required /></label>
+            <label>저자 <input type="text" id="d_author" /></label>
+            <label>출판사 <input type="text" id="d_publisher" /></label>
+            <label>출간일 <input type="text" id="d_pubDate" placeholder="YYYY-MM-DD" /></label>
+            <label>ISBN <input type="text" id="d_isbn" /></label>
+            <label>분류 <input type="text" id="d_category" list="categoryList" /></label>
+            <label>소개 <textarea id="d_description" rows="3"></textarea></label>
+            <label class="qty-row">보유 권수
+              <span class="qty-stepper">
+                <button type="button" data-qty="-1">−</button>
+                <input type="number" id="d_quantity" min="0" value="1" />
+                <button type="button" data-qty="1">+</button>
+              </span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="deleteBtn" class="btn-danger">삭제</button>
+          <button type="submit" class="btn-primary">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 새 책 등록 모달 -->
+  <div id="addModal" class="modal-overlay" hidden>
+    <div class="modal">
+      <button class="modal-close" data-close>×</button>
+      <h2>새 책 등록</h2>
+      <div class="search-row">
+        <input type="text" id="a_searchQuery" placeholder="책 제목을 입력하고 검색하세요" />
+        <button id="a_searchBtn" class="btn-primary">카카오에서 검색</button>
+      </div>
+      <div id="a_searchResults" class="search-results"></div>
+      <hr />
+      <form id="addForm">
+        <div class="modal-body">
+          <div class="cover-col">
+            <img id="a_cover" class="cover-preview" src="" alt="표지" />
+            <label>표지 이미지 URL
+              <input type="text" id="a_coverUrl" placeholder="https://..." />
+            </label>
+          </div>
+          <div class="fields-col">
+            <label>제목 <input type="text" id="a_title" required /></label>
+            <label>저자 <input type="text" id="a_author" /></label>
+            <label>출판사 <input type="text" id="a_publisher" /></label>
+            <label>출간일 <input type="text" id="a_pubDate" placeholder="YYYY-MM-DD" /></label>
+            <label>ISBN <input type="text" id="a_isbn" /></label>
+            <label>분류 <input type="text" id="a_category" list="categoryList" /></label>
+            <label>소개 <textarea id="a_description" rows="3"></textarea></label>
+            <label class="qty-row">보유 권수
+              <span class="qty-stepper">
+                <button type="button" data-qty="-1">−</button>
+                <input type="number" id="a_quantity" min="1" value="1" />
+                <button type="button" data-qty="1">+</button>
+              </span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn-primary">등록</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 설정 모달 -->
+  <div id="settingsModal" class="modal-overlay" hidden>
+    <div class="modal">
+      <button class="modal-close" data-close>×</button>
+      <h2>설정</h2>
+      <div class="settings-body">
+        <label>카카오 REST API 키
+          <input type="text" id="s_kakaoKey" placeholder="카카오 개발자 사이트에서 발급받은 REST API 키" />
+        </label>
+        <p class="hint">
+          <a href="https://developers.kakao.com" target="_blank" rel="noopener">developers.kakao.com</a>
+          → 애플리케이션 추가 → 앱 키 → REST API 키를 복사해서 붙여넣으세요.
+          키는 이 브라우저에만 저장되며 외부로 전송되지 않습니다.
+        </p>
+        <button id="s_saveKeyBtn" class="btn-primary">키 저장</button>
+        <hr />
+        <h3>백업 / 복원</h3>
+        <div class="settings-actions">
+          <button id="s_exportBtn" class="btn-secondary">JSON으로 내보내기</button>
+          <label class="btn-secondary file-label">
+            JSON 불러오기
+            <input type="file" id="s_importInput" accept="application/json" hidden />
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="categoryList"></datalist>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="js/seed-data.js"></script>
+  <script src="js/kakao.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
