@@ -193,8 +193,7 @@ async function doSearch() {
   const q = $("#a_searchQuery").value.trim();
   if (!q) return;
   if (!Kakao.hasKey()) {
-    toast("설정에서 카카오 API 키를 먼저 등록해 주세요");
-    $("#settingsModal").hidden = false;
+    toast("카카오 키가 없어 자동 검색을 쓸 수 없어요. 아래 항목을 직접 입력해 주세요");
     return;
   }
   const resultsEl = $("#a_searchResults");
@@ -269,8 +268,7 @@ $("#addForm").addEventListener("submit", (e) => {
 // ---------- 일괄 정보 보완 ----------
 $("#enrichAllBtn").addEventListener("click", async () => {
   if (!Kakao.hasKey()) {
-    toast("설정에서 카카오 API 키를 먼저 등록해 주세요");
-    $("#settingsModal").hidden = false;
+    toast("카카오 키가 없어 자동 보완을 쓸 수 없어요. 책을 눌러 직접 수정해 주세요");
     return;
   }
   const targets = books.filter((b) => !b.author || !b.publisher || !b.cover);
